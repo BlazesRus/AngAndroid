@@ -773,7 +773,7 @@ public class TermView extends View implements OnGestureListener {
 		dirZoneFill.setAlpha(alpha);
 	}
 
-	public TSize getCharDimensions(Paint p)
+	public static TSize getCharDimensions(Paint p)
 	{
 		int h = (int)Math.ceil(p.getFontSpacing());
 		int w = (int)p.measureText("X", 0, 1);

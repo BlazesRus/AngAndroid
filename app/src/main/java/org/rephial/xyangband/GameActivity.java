@@ -67,6 +67,7 @@ public class GameActivity extends Activity {
 	AngbandKeyboardView virtualKeyboardView = null;
 
 	public AdvKeyboard advKeyboard = null;
+	public MiniKbd miniKeyboard = null;
 
 	private LinearLayout ribbonZone = null;
 	private ButtonRibbon bottomRibbon = null;
@@ -577,7 +578,7 @@ public class GameActivity extends Activity {
 			}
 
 			if (makeAdvKeyboard) {
-
+				/*
 				if (Preferences.getKeyboardHeight() == 0) {
 					resetAdvKeyboardHeight();
 				}
@@ -585,6 +586,11 @@ public class GameActivity extends Activity {
 				advKeyboard = new AdvKeyboard(this);
 				advKeyboard.mainView.setLayoutParams(lparams);
 				frameInput.addView(advKeyboard.mainView);
+				*/
+
+				miniKeyboard = new MiniKbd(this);
+				miniKeyboard.setLayoutParams(lparams);
+				frameInput.addView(miniKeyboard);
 			}
 			else if (makeOldKbd) {
 				virtualKeyboard = new AngbandKeyboard(this);
@@ -863,11 +869,11 @@ public class GameActivity extends Activity {
 	}
 
 	public void refreshInputWidgets()
-	{		
+	{
 		if (term != null) term.invalidate();
-		
+
 		if (advKeyboard != null) {
-			advKeyboard.setOpacityMode(state.opaqueWidgets ? 2: 0);			
+			advKeyboard.setOpacityMode(state.opaqueWidgets ? 2: 0);
 			invalidateRecursive(advKeyboard.mainView);
 		}
 
@@ -876,7 +882,7 @@ public class GameActivity extends Activity {
 			invalidateRecursive(bottomRibbon.rootView);
 		}
 
-		if (topRibbon != null) {		
+		if (topRibbon != null) {
 			invalidateRecursive(topRibbon.rootView);
 		}
 	}
@@ -1012,6 +1018,10 @@ public class GameActivity extends Activity {
 
 		if (advKeyboard != null && advKeyboard.vertical) {
 			w += advKeyboard.mainView.getWidth();
+		}
+
+		if (miniKeyboard != null) {
+			w += miniKeyboard.getWidth();
 		}
 
 		return w;
