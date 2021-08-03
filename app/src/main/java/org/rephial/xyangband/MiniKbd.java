@@ -47,12 +47,55 @@ class MiniKbd extends View
 	final public GameActivity context;
 	public StateManager state;
 
-	public AdvButton(GameActivity p_context)
+	public int rows = 5;
+	public int cols = 4;
+
+	public int key_wid = 1;
+	public int key_hgt = 1;
+
+	public Key[][] keys;
+
+	public MiniKbd(GameActivity p_context)
 	{
 		super(p_context);
 
 		context = p_context;
 		state = context.state;
+
+		keys = new Key[rows][cols];
+
+		for (int y = 0; y < rows; y++) {
+			for (int x = 0; x < cols; x++) {
+				Key k = new Key();
+				k.x = x;
+				k.y = y;
+				keys[y][x] = k;
+			}
+		}
+
+		keys[0][0].text = "abc";
+
+		keys[4][0].text = "Esc";
+		keys[4][1].text = "Ret";
+		keys[4][2].text = "Bkp";
+	}
+
+	public void reset()
+	{
+		for (int y = 0; y < rows; y++) {
+			for (int x = 0; x < cols; x++) {
+				keys[y][x].label = keys[y][x].text;
+			}
+		}
+	}
+
+	public class Key
+	{
+		public int x = 0;
+		public int y = 0;
+		public String text = "";
+		public String label = "";
+		public String type = "";
 	}
 
 	public void setShiftMode(int mode)
@@ -102,10 +145,10 @@ class MiniKbd extends View
 		if (parent.opacityMode == 2) {
 			return max;
 		}
+		*/
 
 		// Normal
 		return 80;
-		*/
 	}
 
 	public int calculateAlphaFg()
@@ -131,6 +174,8 @@ class MiniKbd extends View
 
 		return Math.max(p, min);
 		*/
+
+		return 90;
 	}
 
 	public void setBgColor(Paint back)
@@ -249,12 +294,9 @@ class MiniKbd extends View
 	protected void onMeasure(int widthMeasureSpec,
 		int heightMeasureSpec)
 	{
-		/*
-		int w = parent.btnWidth;
-		int h = parent.btnHeight;
-
+		int w = key_wid * cols;
+		int h = key_hgt * rows;
 		setMeasuredDimension(w, h);
-		*/
 	}
 
 	@Override
