@@ -120,26 +120,20 @@ class MiniKbd extends View
 		keys[0][1].text = "mno";
 		keys[0][1].page = 2;
 
-		keys[0][2].text = "z12";
+		keys[0][2].text = "yz1";
 		keys[0][2].page = 3;
 
-		keys[1][0].text = "x";
+		keys[1][0].text = ".*'";
 		keys[1][0].page = 4;
 
-		keys[1][1].text = "x";
+		keys[1][1].text = ">={";
 		keys[1][1].page = 5;
 
-		keys[1][2].text = "x";
+		keys[1][2].text = "@+-";
 		keys[1][2].page = 6;
 
-		keys[2][0].text = "x";
+		keys[2][0].text = "F1";
 		keys[2][0].page = 7;
-
-		//keys[2][1].text = "x";
-		//keys[2][1].page = 8;
-
-		//keys[2][2].text = "x";
-		//keys[2][2].page = 9;
 
 		keys[4][0].text = InputUtils.Escape;
 		keys[4][1].text = InputUtils.Enter;
@@ -156,7 +150,7 @@ class MiniKbd extends View
 	public void createKeyList()
 	{
 		String base = "abcdefghijklmnopqrstuvwxyz" +
-			"0123456789.,*'?~!#$%&<>|^" +
+			"0123456789.,*'?~!#$%&|<>^" +
 			"/\\=()[]{}@+-_:;\"";
 		keyList = new String[base.length()+5+12];
 		int i = 0;
@@ -190,7 +184,7 @@ class MiniKbd extends View
 		fore.setTextSize(fontSize);
 		TSize size = TermView.getCharDimensions(fore);
 
-		int padx = (int)(size.height * 0.2f);
+		int padx = (int)(size.height * 0.25f);
 		int pady = (int)(size.height * 0.1f);
 
 		// 3 characters wide
@@ -210,6 +204,7 @@ class MiniKbd extends View
 		}
 		resetSelection();
 		lastTime = 0;
+		setShiftMode(shiftMode);
 	}
 
 	public void resetSelection()
@@ -219,6 +214,7 @@ class MiniKbd extends View
 				keys[y][x].selected = false;
 			}
 		}
+		helper.label = "";
 	}
 
 	public void select(Key key)
@@ -244,7 +240,7 @@ class MiniKbd extends View
 
 				if (key.page > 0 && key.page <= 3 && !key.paging && txt.length() >= 2) {
 					if (shiftMode == 1) {
-						txt = txt.substring(0,2).toUpperCase();
+						txt = txt.toUpperCase();
 					}
 					if (shiftMode == 2) {
 						txt = "^"+txt.substring(0,2).toUpperCase();
@@ -281,13 +277,12 @@ class MiniKbd extends View
 	{
 		String label = key.label;
 
-		if (label.length() == 0) {
-			return false;
-		}
+		if (label.length() == 0) return true;
 
 		if (label.equals(InputUtils.Shift)) {
 			setShiftMode((shiftMode+1)%3);
-			key.selected = false;
+			resetSelection();
+			// Allow a new page selection
 			lastTime = 0;
 			invalidate();
 			return false;
@@ -489,7 +484,7 @@ class MiniKbd extends View
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
 			if (lastTime == 0) {
 				lastTime = System.currentTimeMillis();
-				if (key.page > 0) {
+				if (key.page > 0 && !key.paging) {
 					showPage(key.page-1);
 				}
 				select(key);
