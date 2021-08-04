@@ -885,6 +885,10 @@ public class GameActivity extends Activity {
 		if (topRibbon != null) {
 			invalidateRecursive(topRibbon.rootView);
 		}
+
+		if (miniKeyboard != null) {
+			miniKeyboard.invalidate();
+		}
 	}
 
 	public void infoAlert(String msg) {

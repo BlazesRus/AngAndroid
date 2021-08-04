@@ -58,6 +58,8 @@ class MiniKbd extends View
 	public String[] keyList;
 	public int shiftMode = 0;
 
+	public boolean locked = false;
+
 	public Paint back;
 	public Paint fore;
 	//public Paint foreBold;
@@ -137,10 +139,12 @@ class MiniKbd extends View
 
 		keys[4][0].text = InputUtils.Escape;
 		keys[4][1].text = InputUtils.Enter;
-		keys[4][2].text = InputUtils.BackSpace;
+		keys[4][2].text = InputUtils.Shift;
+		keys[4][3].text = InputUtils.BackSpace;
 
-		keys[4][3].text = InputUtils.Shift;
-		keys[3][3].text = "\\s";
+		keys[2][3].text = "run";
+		keys[3][2].text = "\\s";
+		keys[3][3].text = "lck";
 
 		helper = keys[0][3];
 
@@ -273,53 +277,18 @@ class MiniKbd extends View
 		return txt;
 	}
 
-	public boolean execute(Key key)
-	{
-		String label = key.label;
-
-		if (label.length() == 0) return true;
-
-		if (label.equals(InputUtils.Shift)) {
-			setShiftMode((shiftMode+1)%3);
-			resetSelection();
-			// Allow a new page selection
-			lastTime = 0;
-			invalidate();
-			return false;
-		}
-
-		char ch = InputUtils.codeFromName(label);
-
-		if (ch != 0) {
-			state.addKey(ch);
-		}
-		else {
-			InputUtils.processAction(state, label);
-		}
-
-		setShiftMode(0);
-
-		return true;
-	}
-
 	public void configure(String action, boolean visible)
 	{
 	}
 
 	public int calculateAlphaBg()
 	{
-		/*
-		int min = 10;
+		//int min = 10;
 		int max = 200;
 
-		if (parent.opacityMode == 1 && !neverHidden()) {
-			return min;
-		}
-
-		if (parent.opacityMode == 2) {
+		if (state.opaqueWidgets) {
 			return max;
 		}
-		*/
 
 		// Normal
 		return 80;
@@ -330,15 +299,9 @@ class MiniKbd extends View
 		int min = TermView.MIN_OPACITY;
 		int max = 255;
 
-		/*
-		if (parent.opacityMode == 1 && !neverHidden()) {
-			return min;
-		}
-
-		if (parent.opacityMode == 2) {
+		if (state.opaqueWidgets) {
 			return max;
 		}
-		*/
 
 		int p = Preferences.getKeyboardOpacity();
 		p = min + p * (max-min) / 100;
@@ -358,16 +321,21 @@ class MiniKbd extends View
 
 	public void setFgColor(Paint p, Key key)
 	{
-		/*
-		if (usingKeymap()) {
-			fore.setColor(TOGGLED_BG);
+		if (key == helper) {
+			p.setColor(AdvButton.TOGGLED_BG);
+		}
+		else if (shiftMode > 0 && key.label.equals(InputUtils.Shift)) {
+			p.setColor(AdvButton.TOGGLED_BG);
+		}
+		else if (key.label.equals("run") && state.getRunningMode()) {
+			p.setColor(AdvButton.TOGGLED_BG);
+		}
+		else if (locked && key.label.equals("lck")) {
+			p.setColor(AdvButton.TOGGLED_BG);
 		}
 		else {
-			fore.setColor(Color.WHITE);
+			p.setColor(Color.WHITE);
 		}
-		*/
-
-		p.setColor(Color.WHITE);
 	}
 
 	protected void drawKey(Canvas canvas, Key key)
@@ -470,6 +438,44 @@ class MiniKbd extends View
 		}
 	}
 
+	public boolean execute(Key key)
+	{
+		String label = key.label;
+
+		if (label.length() == 0) return true;
+
+		if (label.equals(InputUtils.Shift)) {
+			setShiftMode((shiftMode+1)%3);
+			resetSelection();
+			return false;
+		}
+
+		if (label.equals("lck")) {
+			locked = !locked;
+			resetSelection();
+			return false;
+		}
+
+		if (label.equals("run")) {
+			state.setRunningMode(!state.getRunningMode());
+			resetSelection();
+			return false;
+		}
+
+		char ch = InputUtils.codeFromName(label);
+
+		if (ch != 0) {
+			state.addKey(ch);
+		}
+		else {
+			InputUtils.processAction(state, label);
+		}
+
+		setShiftMode(0);
+
+		return true;
+	}
+
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 
@@ -482,27 +488,34 @@ class MiniKbd extends View
 		}
 
 		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			if (lastTime == 0) {
+			if (key.page > 0 && !key.paging) {
+				showPage(key.page-1);
+				// Wait a short moment to process the up event
+				// (to see the key list)
 				lastTime = System.currentTimeMillis();
-				if (key.page > 0 && !key.paging) {
-					showPage(key.page-1);
-				}
-				select(key);
-				invalidate();
 			}
+			select(key);
+			invalidate();
 		}
 
 		if (event.getAction() == MotionEvent.ACTION_UP) {
 
+			// Discard the up event after showing a page?
 			if (key.page > 0 &&
 				System.currentTimeMillis() - lastTime < 250) {
 				return true;
 			}
 
 			if (execute(key)) {
-				resetKeys();
-				invalidate();
+				if (locked) {
+					resetSelection();
+				}
+				else {
+					resetKeys();
+				}
 			}
+
+			invalidate();
 		}
 
 		if (event.getAction() == MotionEvent.ACTION_MOVE) {
