@@ -56,6 +56,7 @@ class MiniKbd extends View
 	public Key[][] keys;
 	public Key helper;
 	public String[] keyList;
+	public int shiftMode = 0;
 
 	public Paint back;
 	public Paint fore;
@@ -70,6 +71,7 @@ class MiniKbd extends View
 		public int x = 0;
 		public int y = 0;
 		public String text = "";
+		public String pageText = "";
 		public String label = "";
 		public boolean selected = false;
 		public boolean paging = false;
@@ -143,8 +145,8 @@ class MiniKbd extends View
 		keys[4][1].text = InputUtils.Enter;
 		keys[4][2].text = InputUtils.BackSpace;
 
-		keys[3][1].text = InputUtils.Shift;
-		keys[3][2].text = "\\s";
+		keys[4][3].text = InputUtils.Shift;
+		keys[3][3].text = "\\s";
 
 		helper = keys[0][3];
 
@@ -162,7 +164,7 @@ class MiniKbd extends View
 			if (s.length() > 0) keyList[i++] = s;
 		}
 		keyList[i++] = "tab";
-		for (int j = 1; j <= 5; j++) {
+		for (int j = 1; j <= 4; j++) {
 			keyList[i++] = "";
 		}
 		for (int j = 1; j <= 12; j++) {
@@ -200,7 +202,9 @@ class MiniKbd extends View
 	{
 		for (int y = 0; y < rows; y++) {
 			for (int x = 0; x < cols; x++) {
-				keys[y][x].label = keys[y][x].text;
+				String txt = keys[y][x].text;
+				keys[y][x].pageText = txt;
+				keys[y][x].label = txt;
 				keys[y][x].paging = false;
 			}
 		}
@@ -226,36 +230,81 @@ class MiniKbd extends View
 
 	public void setShiftMode(int mode)
 	{
-		/*
-		if (usingKeymap()) return;
+		shiftMode = mode;
 
-		if (defaultValue.length() == 1) {
-			char chr = defaultValue.charAt(0);
-			if (Character.isAlphabetic(chr)) {
-				if (mode == 0) {
-					activeValue = defaultValue;
+		for (int y = 0; y < rows; y++) {
+			for (int x = 0; x < cols; x++) {
+				Key key = keys[y][x];
+
+				String txt = key.pageText;
+
+				if (key.page > 0 && key.paging) {
+					txt = computeShiftMode(txt);
 				}
-				if (mode == 1) {
-					activeValue = ""+Character.toUpperCase(chr);
+
+				if (key.page > 0 && key.page <= 3 && !key.paging && txt.length() >= 2) {
+					if (shiftMode == 1) {
+						txt = txt.substring(0,2).toUpperCase();
+					}
+					if (shiftMode == 2) {
+						txt = "^"+txt.substring(0,2).toUpperCase();
+					}
 				}
-				if (mode == 2) {
-					activeValue = "^"+Character.toUpperCase(chr);
-				}
-				invalidate();
+
+				key.label = txt;
 			}
 		}
-		*/
 	}
 
-	public void execute(Key key)
+	public String computeShiftMode(String txt)
+	{
+		if (txt.length() != 1) return txt;
+
+		char chr = txt.charAt(0);
+
+		if (Character.isAlphabetic(chr)) {
+			if (shiftMode == 0) {
+				return txt;
+			}
+			if (shiftMode == 1) {
+				return ""+Character.toUpperCase(chr);
+			}
+			if (shiftMode == 2) {
+				return "^"+Character.toUpperCase(chr);
+			}
+		}
+
+		return txt;
+	}
+
+	public boolean execute(Key key)
 	{
 		String label = key.label;
 
-		if (label.length() == 0) return;
+		if (label.length() == 0) {
+			return false;
+		}
 
-		InputUtils.processAction(state, label);
+		if (label.equals(InputUtils.Shift)) {
+			setShiftMode((shiftMode+1)%3);
+			key.selected = false;
+			lastTime = 0;
+			invalidate();
+			return false;
+		}
 
-		//parent.setShiftMode(0);
+		char ch = InputUtils.codeFromName(label);
+
+		if (ch != 0) {
+			state.addKey(ch);
+		}
+		else {
+			InputUtils.processAction(state, label);
+		}
+
+		setShiftMode(0);
+
+		return true;
 	}
 
 	public void configure(String action, boolean visible)
@@ -324,28 +373,6 @@ class MiniKbd extends View
 		*/
 
 		p.setColor(Color.WHITE);
-	}
-
-	public void setPressed(boolean value)
-	{
-		/*
-		if (value != pressed) {
-			pressed = value;
-			invalidate();
-		}
-		*/
-	}
-
-	public String getLabel()
-	{
-		/*
-		String label = activeValue;
-		if (usingKeymap() && Preferences.getShowAdvKeymaps()) {
-			label = keymap;
-		}
-		return label;
-		*/
-		return "";
 	}
 
 	protected void drawKey(Canvas canvas, Key key)
@@ -436,12 +463,13 @@ class MiniKbd extends View
 		int from = page*12;
 		for (int y = 0; y < 4; y++) {
 			for (int x = 0; x < 3; x++) {
-				String label = "";
+				String txt = "";
 				if (from < keyList.length) {
-					label = keyList[from];
+					txt = keyList[from];
 				}
 				++from;
-				keys[y][x].label = label;
+				keys[y][x].pageText = txt;
+				keys[y][x].label = computeShiftMode(txt);
 				keys[y][x].paging = true;
 			}
 		}
@@ -452,7 +480,7 @@ class MiniKbd extends View
 
 		Key key = keyFromPosition(event.getX(), event.getY());
 
-		if (key == null || event.getAction() == MotionEvent.ACTION_CANCEL) {
+		if (key == null || (event.getAction() == MotionEvent.ACTION_CANCEL)) {
 			resetKeys();
 			invalidate();
 			return true;
@@ -476,9 +504,10 @@ class MiniKbd extends View
 				return true;
 			}
 
-			execute(key);
-			resetKeys();
-			invalidate();
+			if (execute(key)) {
+				resetKeys();
+				invalidate();
+			}
 		}
 
 		if (event.getAction() == MotionEvent.ACTION_MOVE) {
