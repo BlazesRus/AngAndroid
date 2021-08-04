@@ -55,6 +55,7 @@ class MiniKbd extends View
 
 	public Key[][] keys;
 	public Key helper;
+	public String[] keyList;
 
 	public Paint back;
 	public Paint fore;
@@ -96,6 +97,8 @@ class MiniKbd extends View
 		fore.setAntiAlias(true);
 		fore.setTypeface(context.monoFont);
 
+		createKeyList();
+
 		//resetSize();
 
 		keys = new Key[rows][cols];
@@ -118,13 +121,53 @@ class MiniKbd extends View
 		keys[0][2].text = "z12";
 		keys[0][2].page = 3;
 
-		keys[4][0].text = "Esc";
-		keys[4][1].text = "Ret";
-		keys[4][2].text = "Bkp";
+		keys[1][0].text = "x";
+		keys[1][0].page = 4;
+
+		keys[1][1].text = "x";
+		keys[1][1].page = 5;
+
+		keys[1][2].text = "x";
+		keys[1][2].page = 6;
+
+		keys[2][0].text = "x";
+		keys[2][0].page = 7;
+
+		//keys[2][1].text = "x";
+		//keys[2][1].page = 8;
+
+		//keys[2][2].text = "x";
+		//keys[2][2].page = 9;
+
+		keys[4][0].text = InputUtils.Escape;
+		keys[4][1].text = InputUtils.Enter;
+		keys[4][2].text = InputUtils.BackSpace;
+
+		keys[3][1].text = InputUtils.Shift;
+		keys[3][2].text = "\\s";
 
 		helper = keys[0][3];
 
 		resetKeys();
+	}
+
+	public void createKeyList()
+	{
+		String base = "abcdefghijklmnopqrstuvwxyz" +
+			"0123456789.,*'?~!#$%&<>|^" +
+			"/\\=()[]{}@+-_:;\"";
+		keyList = new String[base.length()+5+12];
+		int i = 0;
+		for (String s: base.split("")) {
+			if (s.length() > 0) keyList[i++] = s;
+		}
+		keyList[i++] = "tab";
+		for (int j = 1; j <= 5; j++) {
+			keyList[i++] = "";
+		}
+		for (int j = 1; j <= 12; j++) {
+			keyList[i++] = "F" + j;
+		}
 	}
 
 	public void resetSize()
@@ -206,9 +249,11 @@ class MiniKbd extends View
 
 	public void execute(Key key)
 	{
-		if (key.label.length() == 0) return;
+		String label = key.label;
 
-		InputUtils.processAction(state, key.label.substring(0,1));
+		if (label.length() == 0) return;
+
+		InputUtils.processAction(state, label);
 
 		//parent.setShiftMode(0);
 	}
@@ -388,10 +433,15 @@ class MiniKbd extends View
 
 	public void showPage(int page)
 	{
+		int from = page*12;
 		for (int y = 0; y < 4; y++) {
 			for (int x = 0; x < 3; x++) {
-				char ch = (char)('a' + x + y * 3);
-				keys[y][x].label = Character.toString(ch);
+				String label = "";
+				if (from < keyList.length) {
+					label = keyList[from];
+				}
+				++from;
+				keys[y][x].label = label;
 				keys[y][x].paging = true;
 			}
 		}
@@ -420,19 +470,23 @@ class MiniKbd extends View
 		}
 
 		if (event.getAction() == MotionEvent.ACTION_UP) {
-			if (key.page > 0 && System.currentTimeMillis() - lastTime < 250) {
+
+			if (key.page > 0 &&
+				System.currentTimeMillis() - lastTime < 250) {
 				return true;
 			}
+
 			execute(key);
 			resetKeys();
 			invalidate();
 		}
 
 		if (event.getAction() == MotionEvent.ACTION_MOVE) {
-			if (key.page == 0 || key.paging) {
-				select(key);
-				invalidate();
+			if (key.page > 0 && !key.paging) {
+				showPage(key.page-1);
 			}
+			select(key);
+			invalidate();
 		}
 
 		return true;
