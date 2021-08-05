@@ -172,28 +172,26 @@ class MiniKbd extends View
 
 	public void resetSize()
 	{
-		int min = 150;
-		int max = 500;
-		int pct = min + Preferences.getFabMult() * (max-min) / 100;
+		int min = 20;
+		int max = 60;
 
-		fontSize = context.landscapeNow() ?
-			Preferences.getLandscapeFontSize():
-			Preferences.getPortraitFontSize();
-		fontSize = Math.max(fontSize, Preferences.getDefaultFontSize());
+		Point winSize = context.getMySize();
 
-		fontSize = pct * fontSize / 100;
-		fontSize = Math.max(fontSize, TermView.MIN_FONT);
-		fontSize = Math.min(fontSize, TermView.MAX_FONT);
+		int pctH = min + Preferences.getKeyboardHeight() * (max-min) / 100;
+		key_hgt = (winSize.y * pctH / 100) / rows;
+		key_wid = (int)(key_hgt * 1.5f);
 
+		fontSize = (int)Math.min(key_hgt * 0.65f,
+			key_wid * 0.40f);
+		fontSize = Math.max(fontSize, 10);
 		fore.setTextSize(fontSize);
-		TSize size = TermView.getCharDimensions(fore);
 
-		int padx = (int)(size.height * 0.25f);
-		int pady = (int)(size.height * 0.1f);
-
-		// 3 characters wide
-		key_wid = (size.width * 3) + padx * 2;
-		key_hgt = size.height + pady * 2;
+		/*
+		int fs2 = (int)Math.min(btnHeight * 0.65f,
+			btnWidth * 0.5f);
+		fs2 = Math.max(fs2, 10);
+		foreBold.setTextSize(fs2);
+		*/
 	}
 
 	public void resetKeys()
@@ -238,17 +236,8 @@ class MiniKbd extends View
 
 				String txt = key.pageText;
 
-				if (key.page > 0 && key.paging) {
+				if (key.paging || (key.page > 0 && key.page <= 3)) {
 					txt = computeShiftMode(txt);
-				}
-
-				if (key.page > 0 && key.page <= 3 && !key.paging && txt.length() >= 2) {
-					if (shiftMode == 1) {
-						txt = txt.toUpperCase();
-					}
-					if (shiftMode == 2) {
-						txt = "^"+txt.substring(0,2).toUpperCase();
-					}
 				}
 
 				key.label = txt;
@@ -258,7 +247,7 @@ class MiniKbd extends View
 
 	public String computeShiftMode(String txt)
 	{
-		if (txt.length() != 1) return txt;
+		if (txt.length() == 0) return txt;
 
 		char chr = txt.charAt(0);
 
@@ -267,10 +256,10 @@ class MiniKbd extends View
 				return txt;
 			}
 			if (shiftMode == 1) {
-				return ""+Character.toUpperCase(chr);
+				return txt.toUpperCase();
 			}
 			if (shiftMode == 2) {
-				return "^"+Character.toUpperCase(chr);
+				return "^"+txt.toUpperCase();
 			}
 		}
 
