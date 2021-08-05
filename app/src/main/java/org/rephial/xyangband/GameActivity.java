@@ -63,8 +63,6 @@ public class GameActivity extends Activity {
 
 	private RelativeLayout screenLayout = null;
 	public TermView term = null;
-	AngbandKeyboard virtualKeyboard = null;
-	AngbandKeyboardView virtualKeyboardView = null;
 
 	public AdvKeyboard advKeyboard = null;
 	public MiniKbd miniKeyboard = null;
@@ -498,7 +496,7 @@ public class GameActivity extends Activity {
 			if (screenLayout != null) screenLayout.removeAllViews();
 			screenLayout = null;
 
-			boolean makeOldKbd = false;
+			boolean makeMiniKbd = false;
 			boolean makeAdvKeyboard = false;
 			boolean makeRibbon = false;
 
@@ -506,26 +504,24 @@ public class GameActivity extends Activity {
 				if (Preferences.isKeyboardVisible()) {
 
 					makeAdvKeyboard = Preferences.getUseAdvKeyboard();
-					makeOldKbd = !makeAdvKeyboard;
+					makeMiniKbd = !makeAdvKeyboard;
 				}
 				else {
 					makeRibbon = true;
 				}
 			}
 
-			virtualKeyboard = null;
-			virtualKeyboardView = null;
-
 			ribbonZone = null;
 			bottomRibbon = null;
 			topRibbon = null;
 
 			advKeyboard = null;
+			miniKeyboard = null;
 
 			boolean vertical = false;
 
 			if (Preferences.getKeyboardOverlap()) {
-				if (makeAdvKeyboard) {
+				if (makeAdvKeyboard || makeMiniKbd) {
 					vertical = true;
 
 					screenLayout = (RelativeLayout)getLayoutInflater()
@@ -537,7 +533,7 @@ public class GameActivity extends Activity {
 				}
 			}
 			else {
-				if (makeAdvKeyboard && Preferences.getVerticalKeyboard()) {
+				if ((makeAdvKeyboard && Preferences.getVerticalKeyboard()) || makeMiniKbd) {
 					vertical = true;
 
 					screenLayout = (RelativeLayout)getLayoutInflater()
@@ -578,7 +574,6 @@ public class GameActivity extends Activity {
 			}
 
 			if (makeAdvKeyboard) {
-				/*
 				if (Preferences.getKeyboardHeight() == 0) {
 					resetAdvKeyboardHeight();
 				}
@@ -586,17 +581,11 @@ public class GameActivity extends Activity {
 				advKeyboard = new AdvKeyboard(this);
 				advKeyboard.mainView.setLayoutParams(lparams);
 				frameInput.addView(advKeyboard.mainView);
-				*/
-
+			}
+			else if (makeMiniKbd) {
 				miniKeyboard = new MiniKbd(this);
 				miniKeyboard.setLayoutParams(lparams);
 				frameInput.addView(miniKeyboard);
-			}
-			else if (makeOldKbd) {
-				virtualKeyboard = new AngbandKeyboard(this);
-				virtualKeyboardView = virtualKeyboard.virtualKeyboardView;
-				virtualKeyboardView.setLayoutParams(lparams);
-				frameInput.addView(virtualKeyboardView);
 			}
 			else if (makeRibbon) {
 				ribbonZone = new LinearLayout(this);
@@ -1003,11 +992,6 @@ public class GameActivity extends Activity {
 
 		if (advKeyboard != null && !advKeyboard.vertical) {
 			h += advKeyboard.mainView.getHeight();
-		}
-
-		if (Preferences.isKeyboardVisible() &&
-			virtualKeyboardView != null) {
-			h += virtualKeyboardView.getHeight();
 		}
 
 		if (ribbonZone != null) {

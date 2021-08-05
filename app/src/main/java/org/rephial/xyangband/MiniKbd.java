@@ -62,9 +62,7 @@ class MiniKbd extends View
 
 	public Paint back;
 	public Paint fore;
-	//public Paint foreBold;
-
-	public int fontSize = 17;
+	public Paint foreBold;
 
 	public long lastTime = 0;
 
@@ -89,17 +87,15 @@ class MiniKbd extends View
 
 		back = new Paint();
 
-		/*
-		foreBold = new Paint();
-		foreBold.setTextAlign(Paint.Align.LEFT);
-		foreBold.setAntiAlias(true);
-		foreBold.setTypeface(context.monoBoldFont);
-		*/
-
 		fore = new Paint();
 		fore.setTextAlign(Paint.Align.LEFT);
 		fore.setAntiAlias(true);
 		fore.setTypeface(context.monoFont);
+
+		foreBold = new Paint();
+		foreBold.setTextAlign(Paint.Align.LEFT);
+		foreBold.setAntiAlias(true);
+		foreBold.setTypeface(context.monoBoldFont);
 
 		createKeyList();
 
@@ -181,17 +177,13 @@ class MiniKbd extends View
 		key_hgt = (winSize.y * pctH / 100) / rows;
 		key_wid = (int)(key_hgt * 1.5f);
 
-		fontSize = (int)Math.min(key_hgt * 0.65f,
-			key_wid * 0.40f);
-		fontSize = Math.max(fontSize, 10);
-		fore.setTextSize(fontSize);
+		int fs = (int)Math.min(key_hgt * 0.65f, key_wid * 0.40f);
+		fs = Math.max(fs, 10);
+		fore.setTextSize(fs);
 
-		/*
-		int fs2 = (int)Math.min(btnHeight * 0.65f,
-			btnWidth * 0.5f);
+		int fs2 = (int)Math.min(key_hgt * 0.65f, key_wid * 0.5f);
 		fs2 = Math.max(fs2, 10);
 		foreBold.setTextSize(fs2);
-		*/
 	}
 
 	public void resetKeys()
@@ -339,10 +331,12 @@ class MiniKbd extends View
 		canvas.drawRect(bounds, back);
 
 		String label = key.label;
-		if (label.length() > 3) label = label.substring(0, 3);
-		//if (label.length() == 1) fore = parent.foreBold;
-
 		if (label.length() == 0) return;
+
+		Paint pfore = fore;
+
+		if (label.length() > 3) label = label.substring(0, 3);
+		if (label.length() == 1) pfore = foreBold;
 
 		//back.setColor(0xAAAAAA);
 		//back.setAlpha(calculateAlphaBg());
@@ -351,24 +345,24 @@ class MiniKbd extends View
 		int tw = key_wid;
 		int th = key_hgt;
 
-		float w2 = fore.measureText(label);
+		float w2 = pfore.measureText(label);
 		float padx = Math.max((tw - w2) / 2, 0);
-		float h2 = fore.descent() - fore.ascent();
-		float pady = Math.max((th - h2) / 2, 0)	+ fore.descent();
+		float h2 = pfore.descent() - pfore.ascent();
+		float pady = Math.max((th - h2) / 2, 0)	+ pfore.descent();
 
-		setFgColor(fore, key);
-		fore.setShadowLayer(10f, 0, 0, Color.CYAN);
-		fore.setAlpha(calculateAlphaFg());
+		setFgColor(pfore, key);
+		pfore.setShadowLayer(10f, 0, 0, Color.CYAN);
+		pfore.setAlpha(calculateAlphaFg());
 
 		canvas.drawText(label,
 			bounds.left + padx,
 			bounds.top + th - pady,
-			fore);
+			pfore);
 	}
 
 	public Key keyFromPosition(float px, float py)
 	{
-		Log.d("Angband", "px " + px + " - py " + py);
+		//Log.d("Angband", "px " + px + " - py " + py);
 
 		if (px >= cols*key_wid || py < 0) {
 			return null;
@@ -460,7 +454,10 @@ class MiniKbd extends View
 			InputUtils.processAction(state, label);
 		}
 
-		setShiftMode(0);
+		if (key.paging && key.pageText.length() == 1
+			&& Character.isAlphabetic(key.pageText.charAt(0))) {
+			setShiftMode(0);
+		}
 
 		return true;
 	}
