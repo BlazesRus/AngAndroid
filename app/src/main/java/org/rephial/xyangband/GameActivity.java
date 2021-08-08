@@ -1001,6 +1001,24 @@ public class GameActivity extends Activity {
 		return h;
 	}
 
+	public int getKeyboardHeightAbsolute() {
+		int h = 0;
+
+		if (advKeyboard != null) {
+			h += advKeyboard.mainView.getHeight();
+		}
+
+		if (ribbonZone != null) {
+			h += ribbonZone.getHeight();
+		}
+
+		if (miniKeyboard != null) {
+			h += miniKeyboard.getHeight();
+		}
+
+		return h;
+	}
+
 	public int getKeyboardWidth() {
 		int w = 0;
 
