@@ -5,16 +5,6 @@
 static char soft_kbd_buffer[256] = "";
 static bool flashing_keys = true;
 
-int Term_control(int what, const char *msg)
-{
-	if (strlen(msg) == 0) {
-		return (-1);
-	}
-
-	/* Call the hook */
-	return control_msg(what, msg);
-}
-
 #if 0
 int Term_control_ws(int what, int n, const wchar_t *ws)
 {

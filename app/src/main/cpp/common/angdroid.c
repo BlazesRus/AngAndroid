@@ -460,7 +460,7 @@ static errr Term_xtra_android(int n, int v)
 	return 1;
 }
 
-static errr Term_control_android(int what, const char *msg)
+int Term_control(int what, const char *msg)
 {
 	const char *pbuf = msg;
 	char buf[2048] = "";
@@ -500,7 +500,7 @@ static errr Term_curs_android(int x, int y)
 {
 	move(y, x);
 
-	Term_control_android(TERM_CONTROL_SHOW_CURSOR, "small");
+	Term_control(TERM_CONTROL_SHOW_CURSOR, "small");
 
 	return 0;
 }
@@ -509,7 +509,7 @@ static errr Term_bigcurs_android(int x, int y)
 {
 	move(y, x);
 
-	Term_control_android(TERM_CONTROL_SHOW_CURSOR, "big");
+	Term_control(TERM_CONTROL_SHOW_CURSOR, "big");
 
 	return 0;
 }
