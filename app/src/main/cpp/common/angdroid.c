@@ -683,7 +683,6 @@ static void term_data_link(int i)
 	t->wipe_hook = Term_wipe_android;
 	t->text_hook = Term_text_android;
 	t->pict_hook = Term_pict_android;
-	t->control_hook = Term_control_android;
 	t->dblh_hook = is_dh_tile;
 
 #if defined(SIDEBAR_MODE)

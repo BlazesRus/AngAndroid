@@ -24,6 +24,10 @@
 #include "ui-event.h"
 #include "ui-term.h"
 
+#ifdef ANDROID
+#include "droid.h"
+#endif
+
 /**
  * Holds a generic command.  If hook is not NULL, that function
  * will be called.  Otherwise, if cmd is not CMD_NULL, that command
@@ -84,12 +88,6 @@ extern bool inkey_flag;
 extern u16b lazymove_delay;
 extern bool msg_flag;
 extern bool arg_force_name;
-
-// For control keys in android
-void soft_kbd_flash(const char *keys);
-void soft_kbd_linger(const char *keys);
-void soft_kbd_clear(bool force);
-void soft_kbd_flush();
 
 void flush(game_event_type unused, game_event_data *data, void *user);
 ui_event inkey_ex(void);
