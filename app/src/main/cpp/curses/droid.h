@@ -29,4 +29,6 @@ extern void soft_kbd_flush();
 
 extern void strdeldup(char *str);
 
+extern void feed_keymap(const char *buf);
+
 #endif

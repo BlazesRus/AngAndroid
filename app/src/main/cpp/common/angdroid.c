@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include "ui-keymap.h"
+#include "z-file.h"
 #include "ui-output.h"
 #include "curses.h"
 #include "grafmode.h"
@@ -474,12 +474,6 @@ int Term_control(int what, const char *msg)
 
 	if (what == TERM_CONTROL_CONTEXT && IN_THE_DUNGEON) {
 		strnfmt(buf, sizeof(buf), "in_dungeon:1");
-
-#if defined(HAS_KEYMAP_PACK)
-		n = strlen(buf);
-		keymap_pack(buf+n, sizeof(buf)-n);
-#endif
-
 		pbuf = buf;
 	}
 
